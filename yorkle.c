@@ -71,6 +71,18 @@ int load_valid_words(valid_word_list_t *valid_words) {
 int load_todays_answer(char answer[]) {
 
   // YOUR CODE HERE
+  FILE* filePtr;
+  filePtr = fopen("answer.txt", "r");
+  if (filePtr == NULL) return 0;
+  char ch;
+  int i = 0;
+  do{
+    ch = fgetc(filePtr);
+    answer[i] = ch;
+    i++;
+  } while(i < WORD_SIZE);
+  answer[i] = '\0'; //string-termination or null byte
+  return 1;
 }
 
 /**
