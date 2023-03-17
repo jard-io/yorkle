@@ -174,7 +174,7 @@ int read_attempt(unsigned int num_attempt, char attempt[]) {
     }
 
     
-    if (isspace(c)) { // break if there is a space after the end of the word.
+    if (isspace(c)) { // break if there is a space after the end of the word.(Example:asdfasdf   )
       break;
     }
 
@@ -188,7 +188,7 @@ int read_attempt(unsigned int num_attempt, char attempt[]) {
 
   attempt[index] = '\0';//termination byte
 
-  //error check
+  //error check(while attempting to read)
   if (feof(stdin) || ferror(stdin)) {
     return 0;
   }
@@ -277,7 +277,42 @@ int attempt_is_valid(const valid_word_list_t *valid_words, const char attempt[])
  */
 int compare_result(const char todays_answer[], const char attempt[], letter_result_t result[]) {
 
-  // YOUR CODE HERE
+  // boolean(true if all letters are in place)
+
+  int isExactMatch = 1;
+
+  //checks if there are any characters that in the same position(assigns result[i] toLR_IN_PLACE)
+
+  for (int i = 0; i < WORD_SIZE; i++){
+    if (attempt[i] == todays_answer[i]){
+      result[i] = LR_IN_PLACE;
+    }else{
+      result[i] = LR_INCORRECT;
+      isExactMatch = 0;
+    }
+  }
+
+
+  for (int i = 0; i < WORD_SIZE; i++)
+  {
+    if (result[i] != LR_IN_PLACE){
+      
+      for (int j = 0; j < WORD_SIZE; j++){
+        
+        if (todays_answer[i] == attempt[j] && result[j] != LR_IN_PLACE & result[j] != LR_WRONG_PLACE){
+          
+          result[j] =LR_WRONG_PLACE;
+          break;
+        }
+        
+      }
+    
+    }
+    
+  
+  }
+  
+  return isExactMatch;
 }
 
 /**
@@ -297,6 +332,24 @@ int compare_result(const char todays_answer[], const char attempt[], letter_resu
 void print_attempt_result(const char attempt[], const letter_result_t result[]) {
 
   // YOUR CODE HERE
+  
+  
+  printf("Result: ");
+
+// prints each attempt based on the three format specifiers(LETTER_FORMAT_INCORRECT,LETTER_FORMAT_WRONG_PLACE, and LETTER_FORMAT_IN_PLACE)
+  for (int i = 0; i < WORD_SIZE; i++){
+    
+    if(result[i] == LR_INCORRECT)
+      printf(LETTER_FORMAT_INCORRECT,  attempt[i]);
+    else if(result[i] == LR_WRONG_PLACE)
+      printf(LETTER_FORMAT_WRONG_PLACE,  attempt[i]);
+    else
+       printf(LETTER_FORMAT_IN_PLACE, attempt[i]);
+  }
+
+  // line break at the end of the line
+  
+  printf("\n");
 }
 
 /**
@@ -317,6 +370,23 @@ void print_attempt_result(const char attempt[], const letter_result_t result[]) 
 int save_stats(player_stats_t *stats, unsigned int num_attempts) {
 
   // YOUR CODE HERE
+
+  stats->num_missed_words = num_attempts;
+
+  FILE *fp = fopen("stats.txt", "w");
+  if (fp == NULL) return 0;
+
+  
+  for(int i = 0; i < MAX_NUM_ATTEMPTS; i++){
+    fprintf(fp, "%d ", stats->wins_per_num_attempts[i]);
+  }
+
+  fprintf(fp, "%d", stats->num_missed_words);
+  fclose(fp);
+
+  return 1;
+
+
 }
 
 /**
