@@ -32,9 +32,9 @@
 int load_valid_words(valid_word_list_t *valid_words) {
   // YOUR CODE HERE
   FILE* filePtr;
-  char ch;
-  int wordCount = 0;
   int charIdx = 0;
+  int wordCount = 0;
+  char ch;
   filePtr = fopen("words.txt", "r");
 
   if (filePtr == NULL){
@@ -42,17 +42,23 @@ int load_valid_words(valid_word_list_t *valid_words) {
   }
 
   //do while loop: get each char in file
-  do {
-    ch=fgetc(filePtr); //get character;
-    valid_words->words[wordCount][charIdx];
+  while((ch=fgetc(filePtr)) != EOF && wordCount < MAX_VALID_WORDS)
+  {
+    if (ch != '\n')
+      valid_words->words[wordCount][charIdx] = ch;
+    else
+      valid_words->words[wordCount][charIdx] = '\0';
+
     if (charIdx == WORD_SIZE){
       charIdx = 0;
       wordCount++;
     }
-    charIdx++;
+    else
+      charIdx++;
     //continue looping until end of file or word limit is reached
-  } while (ch != EOF && wordCount < MAX_VALID_WORDS);
-  
+  } 
+
+  valid_words->num_words=wordCount;
   fclose(filePtr);
   return 1;
 }
@@ -82,6 +88,7 @@ int load_todays_answer(char answer[]) {
     i++;
   } while(i < WORD_SIZE);
   answer[i] = '\0'; //string-termination or null byte
+  fclose(filePtr);
   return 1;
 }
 
@@ -96,10 +103,10 @@ int load_todays_answer(char answer[]) {
 void load_stats(player_stats_t *stats) {
   
   
-  char c;
+  int n;
   FILE* filePtr;
   filePtr = fopen("stats.txt", "r"); //read file
-
+  char ch;
   //if file doesn't exist
   if (filePtr == NULL)
   {
@@ -108,20 +115,22 @@ void load_stats(player_stats_t *stats) {
     {
       stats->wins_per_num_attempts[i]=0;
     }
-
+    stats->num_missed_words=0;
     return;
   }
-
-  //initialize stats
-  for(int i = 0; (c=fscanf(filePtr, "%d")) ; i++)
+  int i = 0;
+  while((ch=fgetc(filePtr)) != '\n')
   {
-    if (i != 6)
-      stats->wins_per_num_attempts[i] = c;
-    else
-      stats->num_missed_words = c;
+    if (ch != ' ' && i != 6)
+    {
+      stats->wins_per_num_attempts[i] = atoi(ch);
+      i++;
+    }
+    else if (i == 6)
+      stats->num_missed_words = atoi(ch);
+    //continue looping until end of file or word limit is reached
   }
-
-  
+  fclose(filePtr);
 }
 
 /**
@@ -150,22 +159,46 @@ void load_stats(player_stats_t *stats) {
  */
 int read_attempt(unsigned int num_attempt, char attempt[]) {
 
-  printf("Attempt #%d: ", num_attempt);
-  char * word[WORD_SIZE];
-  scanf(" %s",  word);
-  int error = 1;
+  // YOUR CODE HERE
+
   
-  for (int i = 0; word[i] != ' '   ; i++)
-  {
-    if (word[i] == EOF)
-    {
-      error = 0;
+
+  printf("Attempt #%u: ", num_attempt);
+
+
+  int index = 0;
+  char c = getchar();
+
+
+    while (c!= EOF && index < WORD_SIZE) {
+    
+    if (index == 0 && isspace(c)) { // ignores spaces at the start of the input(this condition true until there are no longer spaces at the start)
+      c = getchar();
+      continue;
     }
+
+    
+    if (isspace(c)) { // break if there is a space after the end of the word.
       break;
-    attempt[i] = word[i];
+    }
+
+    
+    attempt[index] = tolower(c);
+    index++;
+    c = getchar();
+  }
+  
+
+
+  attempt[index] = '\0';//termination byte
+
+  //error check
+  if (feof(stdin) || ferror(stdin)) {
+    return 0;
   }
 
-  return error;
+  return 1;
+
   
 }
 
@@ -187,6 +220,19 @@ int read_attempt(unsigned int num_attempt, char attempt[]) {
 int attempt_is_valid(const valid_word_list_t *valid_words, const char attempt[]) {
 
   // YOUR CODE HERE
+
+  unsigned int size = valid_words->num_words;
+
+  for(unsigned int i = 0; i < size; i++){
+
+    if(strcmp(valid_words->words[i], attempt) == 0) 
+      return 1;
+  }
+
+//the word is not valid
+  fprintf(stderr, "'%s' is not a valid word.\n", attempt);
+  return 0;
+  
 }
 
 /**
@@ -235,7 +281,42 @@ int attempt_is_valid(const valid_word_list_t *valid_words, const char attempt[])
  */
 int compare_result(const char todays_answer[], const char attempt[], letter_result_t result[]) {
 
-  // YOUR CODE HERE
+  // boolean(true if all letters are in place)
+
+  int isExactMatch = 1;
+
+  //checks if there are any characters that in the same position(assigns result[i] toLR_IN_PLACE)
+
+  for (int i = 0; i < WORD_SIZE; i++){
+    if (attempt[i] == todays_answer[i]){
+      result[i] = LR_IN_PLACE;
+    }else{
+      result[i] = LR_INCORRECT;
+      isExactMatch = 0;
+    }
+  }
+
+
+  for (int i = 0; i < WORD_SIZE; i++)
+  {
+    if (result[i] != LR_IN_PLACE){
+      
+      for (int j = 0; j < WORD_SIZE; j++){
+        
+        if (todays_answer[i] == attempt[j] && result[j] != LR_IN_PLACE & result[j] != LR_WRONG_PLACE){
+          
+          result[j] =LR_WRONG_PLACE;
+          break;
+        }
+        
+      }
+    
+    }
+    
+  
+  }
+  
+  return isExactMatch;
 }
 
 /**
@@ -311,7 +392,7 @@ void print_stats(const player_stats_t *stats) {
   printf("Played: %d\n", totalPlayed);
 
   winRate = numWins / totalPlayed;
-  printf("Win \%: %lf\%\n\n", winRate);
+  printf("Win %%: %lf%%\n\n", winRate);
 
   printf("Guess distribution:");
 
