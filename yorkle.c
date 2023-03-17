@@ -174,7 +174,7 @@ int read_attempt(unsigned int num_attempt, char attempt[]) {
     }
 
     
-    if (isspace(c)) { 
+    if (isspace(c)) { // break if there is a space after the end of the word.
       break;
     }
 
@@ -216,6 +216,19 @@ int read_attempt(unsigned int num_attempt, char attempt[]) {
 int attempt_is_valid(const valid_word_list_t *valid_words, const char attempt[]) {
 
   // YOUR CODE HERE
+
+  unsigned int size = valid_words->num_words;
+
+  for(unsigned int i = 0; i < size; i++){
+
+    if(strcmp(valid_words->words[i], attempt) == 0)
+      return 1;
+  }
+
+
+  fprintf(stderr, "'%s' is not a valid word.\n", attempt);
+  return 0;
+  
 }
 
 /**
