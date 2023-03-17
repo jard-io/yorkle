@@ -44,7 +44,7 @@ int load_valid_words(valid_word_list_t *valid_words) {
   //do while loop: get each char in file
   do {
     ch=fgetc(filePtr); //get character;
-    valid_words->words[wordCount][charIdx];
+    valid_words->words[wordCount][charIdx] = ch;
     if (charIdx == WORD_SIZE){
       charIdx = 0;
       wordCount++;
@@ -96,6 +96,37 @@ int load_todays_answer(char answer[]) {
 void load_stats(player_stats_t *stats) {
   
   // YOUR CODE HERE
+
+  FILE* filePtr;
+  filePtr = fopen("stats.txt", "r");
+  if (filePtr == NULL) return 0;
+
+  char c = fgetc(filePtr);
+  int stat;
+  int index = 0;
+  int i = 0;
+  
+
+  while(c != '\n'){
+    
+    if(!isspace(c)){
+      if(index != 6){ // this makes sure the last element of stats.txt is not added
+      stats -> wins_per_num_attempts[index] = atoi(c);
+      index++;
+      }
+      
+    }
+    c = fgetc(filePtr);
+  }
+
+  
+
+
+ 
+  
+
+ 
+  
 }
 
 /**
@@ -125,6 +156,46 @@ void load_stats(player_stats_t *stats) {
 int read_attempt(unsigned int num_attempt, char attempt[]) {
 
   // YOUR CODE HERE
+
+  
+
+  printf("Attempt #%u: ", num_attempt);
+
+
+  int index = 0;
+  char c = getchar();
+
+
+    while (c!= EOF && index < WORD_SIZE) {
+    
+    if (index == 0 && isspace(c)) { // ignores spaces at the start of the input(this condition true until there are no longer spaces at the start)
+      c = getchar();
+      continue;
+    }
+
+    
+    if (isspace(c)) { 
+      break;
+    }
+
+    
+    attempt[index] = tolower(c);
+    index++;
+    c = getchar();
+  }
+  
+
+
+  attempt[index] = '\0';//termination byte
+
+  //error check
+  if (feof(stdin) || ferror(stdin)) {
+    return 0;
+  }
+
+  return 1;
+
+  
 }
 
 /**
