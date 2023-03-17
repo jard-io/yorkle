@@ -95,7 +95,33 @@ int load_todays_answer(char answer[]) {
  */
 void load_stats(player_stats_t *stats) {
   
-  // YOUR CODE HERE
+  
+  char c;
+  FILE* filePtr;
+  filePtr = fopen("stats.txt", "r"); //read file
+
+  //if file doesn't exist
+  if (filePtr == NULL)
+  {
+    //set all stats to 0
+    for (int i = 0; i < MAX_NUM_ATTEMPTS; i++)
+    {
+      stats->wins_per_num_attempts[i]=0;
+    }
+
+    return;
+  }
+
+  //initialize stats
+  for(int i = 0; (c=fscanf(filePtr, "%d")) ; i++)
+  {
+    if (i != 6)
+      stats->wins_per_num_attempts[i] = c;
+    else
+      stats->num_missed_words = c;
+  }
+
+  
 }
 
 /**
@@ -124,7 +150,23 @@ void load_stats(player_stats_t *stats) {
  */
 int read_attempt(unsigned int num_attempt, char attempt[]) {
 
-  // YOUR CODE HERE
+  printf("Attempt #%d: ", num_attempt);
+  char * word[WORD_SIZE];
+  scanf(" %s",  word);
+  int error = 1;
+  
+  for (int i = 0; word[i] != ' '   ; i++)
+  {
+    if (word[i] == EOF)
+    {
+      error = 0;
+    }
+      break;
+    attempt[i] = word[i];
+  }
+
+  return error;
+  
 }
 
 /**
@@ -285,5 +327,4 @@ void print_stats(const player_stats_t *stats) {
     printf(" %d\n", wins);
   }
 
-  
 }
