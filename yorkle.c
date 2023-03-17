@@ -221,11 +221,11 @@ int attempt_is_valid(const valid_word_list_t *valid_words, const char attempt[])
 
   for(unsigned int i = 0; i < size; i++){
 
-    if(strcmp(valid_words->words[i], attempt) == 0)
+    if(strcmp(valid_words->words[i], attempt) == 0) 
       return 1;
   }
 
-
+//the word is not valid
   fprintf(stderr, "'%s' is not a valid word.\n", attempt);
   return 0;
   
